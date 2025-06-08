@@ -1,6 +1,7 @@
 class AvailabilityModel {
   final String id;
   final String facultyId;
+  final DateTime date;
   final String day;
   final String startTime;
   final String endTime;
@@ -11,6 +12,7 @@ class AvailabilityModel {
   AvailabilityModel({
     required this.id,
     required this.facultyId,
+    required this.date,
     required this.day,
     required this.startTime,
     required this.endTime,
@@ -40,6 +42,16 @@ class AvailabilityModel {
       facultyId = json['facultyId'] ?? '';
     }
 
+    // Parse date
+    DateTime date;
+    try {
+      date =
+          json['date'] != null ? DateTime.parse(json['date']) : DateTime.now();
+    } catch (e) {
+      print('Error parsing date: $e');
+      date = DateTime.now();
+    }
+
     String day = json['day'] ?? '';
     if (day.isNotEmpty) {
       day = day[0].toUpperCase() + day.substring(1).toLowerCase();
@@ -59,6 +71,7 @@ class AvailabilityModel {
     return AvailabilityModel(
       id: id,
       facultyId: facultyId,
+      date: date,
       day: day,
       startTime: json['startTime'] ?? '',
       endTime: json['endTime'] ?? '',
@@ -78,6 +91,7 @@ class AvailabilityModel {
     return {
       '_id': id,
       'facultyId': facultyId,
+      'date': date.toIso8601String(),
       'day': day,
       'startTime': startTime,
       'endTime': endTime,

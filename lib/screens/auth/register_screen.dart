@@ -24,12 +24,15 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _emailController = TextEditingController();
   final _phoneNumberController = TextEditingController();
   final _registrationNumberController = TextEditingController();
-  final _courseController = TextEditingController();
+  final _courseController = TextEditingController(text: "B.Tech");
   String? _selectedBranch;
-  final _currentYearController = TextEditingController();
-  final _currentSemesterController = TextEditingController();
   String? _selectedDepartment;
   final _otpController = TextEditingController();
+
+  final List<int> _yearOptions = [1, 2, 3, 4];
+  List<int> _semesterOptions = [1, 2];
+  int _selectedYear = 1;
+  int _selectedSemester = 1;
 
   bool _otpSent = false;
   String? _email;
@@ -53,6 +56,18 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
     _loadOptions();
     _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneNumberController.dispose();
+    _registrationNumberController.dispose();
+    _courseController.dispose();
+    _otpController.dispose();
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadOptions() async {
@@ -96,18 +111,37 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneNumberController.dispose();
-    _registrationNumberController.dispose();
-    _courseController.dispose();
-    _currentYearController.dispose();
-    _currentSemesterController.dispose();
-    _otpController.dispose();
-    _animationController.dispose();
-    super.dispose();
+  void _updateSemesterOptions(int year) {
+    setState(() {
+      switch (year) {
+        case 1:
+          _semesterOptions = [1, 2];
+          break;
+        case 2:
+          _semesterOptions = [3, 4];
+          break;
+        case 3:
+          _semesterOptions = [5, 6];
+          break;
+        case 4:
+          _semesterOptions = [7, 8];
+          break;
+        default:
+          _semesterOptions = [1, 2];
+      }
+      _selectedSemester = _semesterOptions[0];
+    });
+  }
+
+  void _extractRegistrationNumber(String email) {
+    if (email.contains('@muj.manipal.edu')) {
+      final parts = email.split('@')[0].split('.');
+      if (parts.length > 1) {
+        setState(() {
+          _registrationNumberController.text = parts[1];
+        });
+      }
+    }
   }
 
   Future<void> _register() async {
@@ -125,8 +159,8 @@ class _RegisterScreenState extends State<RegisterScreen>
           'registrationNumber': _registrationNumberController.text,
           'course': _courseController.text,
           'branch': _selectedBranch,
-          'currentYear': int.parse(_currentYearController.text),
-          'currentSemester': int.parse(_currentSemesterController.text),
+          'currentYear': _selectedYear,
+          'currentSemester': _selectedSemester,
         });
       } else {
         userData.addAll({'department': _selectedDepartment});
@@ -387,6 +421,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                                         }
                                         return null;
                                       },
+                                      onChanged: (value) {
+                                        if (widget.role == 'student') {
+                                          _extractRegistrationNumber(value);
+                                        }
+                                      },
                                     ),
                                     const SizedBox(height: 16),
                                     InputField(
@@ -438,7 +477,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       const SizedBox(height: 16),
                                       InputField(
                                         label: 'Registration Number',
-                                        hint: 'Enter your registration number',
+                                        hint: 'Registration Number',
                                         controller:
                                             _registrationNumberController,
                                         prefixIcon: const Icon(
@@ -450,6 +489,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           }
                                           return null;
                                         },
+                                        readOnly: true,
+                                        enabled: false,
                                       ),
                                       const SizedBox(height: 16),
                                       InputField(
@@ -466,6 +507,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           }
                                           return null;
                                         },
+                                        readOnly: true,
+                                        enabled: false,
                                       ),
                                       const SizedBox(height: 16),
                                       _buildResponsiveDropdown(
@@ -489,60 +532,150 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       Row(
                                         children: [
                                           Expanded(
-                                            child: InputField(
-                                              label: 'Current Year',
-                                              hint: 'Year',
-                                              controller:
-                                                  _currentYearController,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              prefixIcon: const Icon(
-                                                Icons.calendar_today_outlined,
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return 'Required';
-                                                }
-                                                final year = int.tryParse(
-                                                  value,
-                                                );
-                                                if (year == null ||
-                                                    year < 1 ||
-                                                    year > 5) {
-                                                  return 'Invalid year';
-                                                }
-                                                return null;
-                                              },
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Current Year',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 16,
+                                                    color:
+                                                        AppTheme
+                                                            .textPrimaryColor,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color:
+                                                          Colors.grey.shade400,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                    color: Colors.white,
+                                                  ),
+                                                  child: DropdownButtonFormField<
+                                                    int
+                                                  >(
+                                                    decoration:
+                                                        const InputDecoration(
+                                                          contentPadding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 16,
+                                                              ),
+                                                          border:
+                                                              InputBorder.none,
+                                                        ),
+                                                    value: _selectedYear,
+                                                    items:
+                                                        _yearOptions.map((
+                                                          year,
+                                                        ) {
+                                                          return DropdownMenuItem<
+                                                            int
+                                                          >(
+                                                            value: year,
+                                                            child: Text(
+                                                              year.toString(),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                    onChanged: (value) {
+                                                      if (value != null) {
+                                                        _updateSemesterOptions(
+                                                          value,
+                                                        );
+                                                      }
+                                                    },
+                                                    validator: (value) {
+                                                      if (value == null) {
+                                                        return 'Required';
+                                                      }
+                                                      return null;
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                           const SizedBox(width: 16),
                                           Expanded(
-                                            child: InputField(
-                                              label: 'Current Semester',
-                                              hint: 'Semester',
-                                              controller:
-                                                  _currentSemesterController,
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              prefixIcon: const Icon(
-                                                Icons.view_timeline_outlined,
-                                              ),
-                                              validator: (value) {
-                                                if (value == null ||
-                                                    value.isEmpty) {
-                                                  return 'Required';
-                                                }
-                                                final semester = int.tryParse(
-                                                  value,
-                                                );
-                                                if (semester == null ||
-                                                    semester < 1 ||
-                                                    semester > 10) {
-                                                  return 'Invalid semester';
-                                                }
-                                                return null;
-                                              },
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Current Semester',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 16,
+                                                    color:
+                                                        AppTheme
+                                                            .textPrimaryColor,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color:
+                                                          Colors.grey.shade400,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                    color: Colors.white,
+                                                  ),
+                                                  child: DropdownButtonFormField<
+                                                    int
+                                                  >(
+                                                    decoration:
+                                                        const InputDecoration(
+                                                          contentPadding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 16,
+                                                              ),
+                                                          border:
+                                                              InputBorder.none,
+                                                        ),
+                                                    value: _selectedSemester,
+                                                    items:
+                                                        _semesterOptions.map((
+                                                          semester,
+                                                        ) {
+                                                          return DropdownMenuItem<
+                                                            int
+                                                          >(
+                                                            value: semester,
+                                                            child: Text(
+                                                              semester
+                                                                  .toString(),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                    onChanged: (value) {
+                                                      if (value != null) {
+                                                        setState(() {
+                                                          _selectedSemester =
+                                                              value;
+                                                        });
+                                                      }
+                                                    },
+                                                    validator: (value) {
+                                                      if (value == null) {
+                                                        return 'Required';
+                                                      }
+                                                      return null;
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],

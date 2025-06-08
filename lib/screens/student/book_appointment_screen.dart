@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:campus_connect/providers/appointment_provider.dart';
 import 'package:campus_connect/widgets/button_widget.dart';
 import 'package:campus_connect/widgets/input_field.dart';
@@ -67,7 +68,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen>
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    return DateFormat('EEE, MMM d, yyyy').format(date);
   }
 
   Future<void> _bookAppointment() async {

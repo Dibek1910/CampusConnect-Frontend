@@ -43,10 +43,17 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
   @override
   void initState() {
     super.initState();
-    if (_selectedDate.weekday > 5) {
-      _selectedDate = _selectedDate.add(
-        Duration(days: 8 - _selectedDate.weekday),
-      );
+    // Set default date to next weekday if today is weekend
+    _setDefaultDate();
+  }
+
+  void _setDefaultDate() {
+    final now = DateTime.now();
+    if (now.weekday > 5) {
+      // If weekend, set to next Monday
+      _selectedDate = now.add(Duration(days: 8 - now.weekday));
+    } else {
+      _selectedDate = now;
     }
   }
 
@@ -63,8 +70,11 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 60)),
       selectableDayPredicate: (DateTime date) {
-        return date.weekday <= 5;
+        return date.weekday <= 5; // Only weekdays
       },
+      helpText: 'Select appointment date',
+      cancelText: 'Cancel',
+      confirmText: 'Select',
     );
 
     if (picked != null && picked != _selectedDate) {
@@ -87,10 +97,11 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
           child: child!,
         );
       },
+      helpText: 'Select start time (9 AM - 6 PM)',
     );
 
     if (picked != null) {
-      if (picked.hour < 9 || (picked.hour >= 18)) {
+      if (picked.hour < 9 || picked.hour >= 18) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please select a time between 9:00 AM and 6:00 PM'),
@@ -102,8 +113,9 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
 
       final int durationMinutes = int.parse(_selectedDuration);
       final int endHour = picked.hour + (picked.minute + durationMinutes) ~/ 60;
+      final int endMinute = (picked.minute + durationMinutes) % 60;
 
-      if (endHour >= 18) {
+      if (endHour > 18 || (endHour == 18 && endMinute > 0)) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Appointment must end before 6:00 PM'),
@@ -111,6 +123,23 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
           ),
         );
         return;
+      }
+
+      // Check if the time is not in the past for today's date
+      final now = DateTime.now();
+      if (_selectedDate.day == now.day &&
+          _selectedDate.month == now.month &&
+          _selectedDate.year == now.year) {
+        if (picked.hour < now.hour ||
+            (picked.hour == now.hour && picked.minute <= now.minute)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Cannot select past time for today'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+          return;
+        }
       }
 
       setState(() {
@@ -426,6 +455,15 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
                                     ),
                                   ),
                                 ],
+                              ),
+
+                              const SizedBox(height: 16),
+                              Text(
+                                'End Time: ${_calculateEndTime()}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppTheme.textSecondaryColor,
+                                ),
                               ),
                             ],
                           ),

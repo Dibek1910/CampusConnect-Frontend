@@ -28,14 +28,6 @@ class FacultyDetailScreen extends StatefulWidget {
 
 class _FacultyDetailScreenState extends State<FacultyDetailScreen>
     with SingleTickerProviderStateMixin {
-  final List<String> _daysOfWeek = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-  ];
-
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -84,22 +76,7 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
     }
   }
 
-  DateTime _getDateForDay(String day) {
-    final now = DateTime.now();
-    final currentDayOfWeek = now.weekday;
-    final targetDayOfWeek = _daysOfWeek.indexOf(day) + 1;
-
-    int daysToAdd = targetDayOfWeek - currentDayOfWeek;
-    if (daysToAdd < 0) {
-      daysToAdd += 7;
-    }
-
-    return DateTime(now.year, now.month, now.day + daysToAdd);
-  }
-
   void _navigateToBookAppointment(AvailabilityModel availability) {
-    final date = _getDateForDay(availability.day);
-
     Navigator.of(context).pushNamed(
       AppRouter.bookAppointmentRoute,
       arguments: {
@@ -107,11 +84,15 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
         'facultyName': widget.facultyName,
         'availabilityId': availability.id,
         'day': availability.day,
-        'date': date,
+        'date': availability.date,
         'startTime': availability.startTime,
         'endTime': availability.endTime,
       },
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('EEE, MMM d, yyyy').format(date);
   }
 
   @override
@@ -119,17 +100,20 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
     final facultyProvider = Provider.of<FacultyProvider>(context);
     final availabilities = facultyProvider.availabilities;
 
-    Map<String, List<AvailabilityModel>> availabilitiesByDay = {};
-
-    for (var day in _daysOfWeek) {
-      availabilitiesByDay[day] = [];
-    }
+    // Group availabilities by date
+    Map<String, List<AvailabilityModel>> availabilitiesByDate = {};
 
     for (var availability in availabilities) {
-      if (availabilitiesByDay.containsKey(availability.day)) {
-        availabilitiesByDay[availability.day]!.add(availability);
+      final dateKey = DateFormat('yyyy-MM-dd').format(availability.date);
+      if (!availabilitiesByDate.containsKey(dateKey)) {
+        availabilitiesByDate[dateKey] = [];
       }
+      availabilitiesByDate[dateKey]!.add(availability);
     }
+
+    // Sort dates
+    final sortedDates =
+        availabilitiesByDate.keys.toList()..sort((a, b) => a.compareTo(b));
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.facultyName), elevation: 4),
@@ -236,15 +220,12 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
                             : ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _daysOfWeek.length,
+                              itemCount: sortedDates.length,
                               itemBuilder: (context, index) {
-                                final day = _daysOfWeek[index];
-                                final dayAvailabilities =
-                                    availabilitiesByDay[day] ?? [];
-
-                                if (dayAvailabilities.isEmpty) {
-                                  return const SizedBox.shrink();
-                                }
+                                final dateKey = sortedDates[index];
+                                final dateAvailabilities =
+                                    availabilitiesByDate[dateKey] ?? [];
+                                final date = DateTime.parse(dateKey);
 
                                 return AnimatedListItem(
                                   delay: Duration(milliseconds: 100 * index),
@@ -269,7 +250,7 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
                                           ),
                                         ),
                                         child: Text(
-                                          day,
+                                          _formatDate(date),
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
@@ -281,7 +262,7 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
                                         spacing: 8,
                                         runSpacing: 8,
                                         children:
-                                            dayAvailabilities.map((
+                                            dateAvailabilities.map((
                                               availability,
                                             ) {
                                               return InkWell(

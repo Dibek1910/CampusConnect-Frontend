@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:campus_connect/models/availability_model.dart';
 import 'package:campus_connect/providers/availability_provider.dart';
 import 'package:campus_connect/widgets/button_widget.dart';
@@ -18,15 +19,7 @@ class AvailabilityScreen extends StatefulWidget {
 
 class _AvailabilityScreenState extends State<AvailabilityScreen>
     with SingleTickerProviderStateMixin {
-  final List<String> _daysOfWeek = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-  ];
-
-  String _selectedDay = 'Monday';
+  DateTime _selectedDate = DateTime.now();
   final TextEditingController _startTimeController = TextEditingController();
   final TextEditingController _endTimeController = TextEditingController();
   bool _isAdding = false;
@@ -45,9 +38,22 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     );
     _animationController.forward();
 
+    // Set default date to next weekday if today is weekend
+    _setDefaultDate();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAvailabilities();
     });
+  }
+
+  void _setDefaultDate() {
+    final now = DateTime.now();
+    if (now.weekday > 5) {
+      // If weekend, set to next Monday
+      _selectedDate = now.add(Duration(days: 8 - now.weekday));
+    } else {
+      _selectedDate = now;
+    }
   }
 
   @override
@@ -64,6 +70,28 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
       listen: false,
     );
     await availabilityProvider.fetchFacultyAvailabilities();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      selectableDayPredicate: (DateTime date) {
+        // Only allow weekdays (Monday = 1, Friday = 5)
+        return date.weekday >= 1 && date.weekday <= 5;
+      },
+      helpText: 'Select availability date',
+      cancelText: 'Cancel',
+      confirmText: 'Select',
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 
   Future<void> _addAvailabilitySlot() async {
@@ -87,10 +115,38 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     final endHour = int.parse(endTimeParts[0]);
     final endMinute = int.parse(endTimeParts[1]);
 
+    // Validate time range (9 AM to 6 PM)
+    if (startHour < 9 ||
+        startHour >= 18 ||
+        (startHour == 18 && startMinute > 0)) {
+      _showSnackBar('Start time must be between 9:00 AM and 6:00 PM');
+      return;
+    }
+
+    if (endHour < 9 || endHour > 18 || (endHour == 18 && endMinute > 0)) {
+      _showSnackBar('End time must be between 9:00 AM and 6:00 PM');
+      return;
+    }
+
     if (endHour < startHour ||
         (endHour == startHour && endMinute <= startMinute)) {
       _showSnackBar('End time must be after start time');
       return;
+    }
+
+    // Check if the time is not in the past for today's date
+    final now = DateTime.now();
+    if (_selectedDate.day == now.day &&
+        _selectedDate.month == now.month &&
+        _selectedDate.year == now.year) {
+      final currentHour = now.hour;
+      final currentMinute = now.minute;
+
+      if (startHour < currentHour ||
+          (startHour == currentHour && startMinute <= currentMinute)) {
+        _showSnackBar('Cannot set availability for past time slots');
+        return;
+      }
     }
 
     setState(() {
@@ -103,7 +159,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     );
 
     final slotData = {
-      'day': _selectedDay,
+      'date': _selectedDate.toIso8601String(),
       'startTime': _startTimeController.text,
       'endTime': _endTimeController.text,
     };
@@ -175,9 +231,16 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
           child: child!,
         );
       },
+      helpText: 'Select time (9 AM - 6 PM)',
     );
 
     if (pickedTime != null) {
+      // Validate time range
+      if (pickedTime.hour < 9 || pickedTime.hour >= 18) {
+        _showSnackBar('Please select a time between 9:00 AM and 6:00 PM');
+        return;
+      }
+
       final hour = pickedTime.hour.toString().padLeft(2, '0');
       final minute = pickedTime.minute.toString().padLeft(2, '0');
       controller.text = '$hour:$minute';
@@ -195,22 +258,29 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     );
   }
 
+  String _formatDate(DateTime date) {
+    return DateFormat('EEE, MMM d, yyyy').format(date);
+  }
+
   @override
   Widget build(BuildContext context) {
     final availabilityProvider = Provider.of<AvailabilityProvider>(context);
     final availabilities = availabilityProvider.availabilities;
 
-    Map<String, List<AvailabilityModel>> availabilitiesByDay = {};
-
-    for (var day in _daysOfWeek) {
-      availabilitiesByDay[day] = [];
-    }
+    // Group availabilities by date
+    Map<String, List<AvailabilityModel>> availabilitiesByDate = {};
 
     for (var availability in availabilities) {
-      if (availabilitiesByDay.containsKey(availability.day)) {
-        availabilitiesByDay[availability.day]!.add(availability);
+      final dateKey = DateFormat('yyyy-MM-dd').format(availability.date);
+      if (!availabilitiesByDate.containsKey(dateKey)) {
+        availabilitiesByDate[dateKey] = [];
       }
+      availabilitiesByDate[dateKey]!.add(availability);
     }
+
+    // Sort dates
+    final sortedDates =
+        availabilitiesByDate.keys.toList()..sort((a, b) => a.compareTo(b));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Manage Availability'), elevation: 4),
@@ -251,41 +321,75 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                DropdownButtonFormField<String>(
-                                  decoration: InputDecoration(
-                                    labelText: 'Day',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
+
+                                // Date Selection
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Date:',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppTheme.textPrimaryColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.grey.shade400,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              color: Colors.white,
+                                            ),
+                                            child: Text(
+                                              _formatDate(_selectedDate),
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                color:
+                                                    AppTheme.textPrimaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
+                                    const SizedBox(width: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: () => _selectDate(context),
+                                      icon: const Icon(Icons.calendar_today),
+                                      label: const Text('Select'),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 16,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  value: _selectedDay,
-                                  items:
-                                      _daysOfWeek.map((day) {
-                                        return DropdownMenuItem<String>(
-                                          value: day,
-                                          child: Text(day),
-                                        );
-                                      }).toList(),
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      setState(() {
-                                        _selectedDay = value;
-                                      });
-                                    }
-                                  },
+                                  ],
                                 ),
+
                                 const SizedBox(height: 16),
+
+                                // Time Selection
                                 Row(
                                   children: [
                                     Expanded(
                                       child: TextFormField(
                                         controller: _startTimeController,
                                         decoration: InputDecoration(
-                                          labelText: 'Start Time (HH:MM)',
+                                          labelText: 'Start Time (9 AM - 6 PM)',
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -305,6 +409,11 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                           ),
                                         ),
                                         keyboardType: TextInputType.datetime,
+                                        readOnly: true,
+                                        onTap:
+                                            () => _showTimePickerDialog(
+                                              _startTimeController,
+                                            ),
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -312,7 +421,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                       child: TextFormField(
                                         controller: _endTimeController,
                                         decoration: InputDecoration(
-                                          labelText: 'End Time (HH:MM)',
+                                          labelText: 'End Time (9 AM - 6 PM)',
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -332,6 +441,11 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                           ),
                                         ),
                                         keyboardType: TextInputType.datetime,
+                                        readOnly: true,
+                                        onTap:
+                                            () => _showTimePickerDialog(
+                                              _endTimeController,
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -359,7 +473,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Manage your weekly availability schedule',
+                        'Manage your availability schedule by date',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.textSecondaryColor,
@@ -377,15 +491,12 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                           : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _daysOfWeek.length,
+                            itemCount: sortedDates.length,
                             itemBuilder: (context, index) {
-                              final day = _daysOfWeek[index];
-                              final dayAvailabilities =
-                                  availabilitiesByDay[day] ?? [];
-
-                              if (dayAvailabilities.isEmpty) {
-                                return const SizedBox.shrink();
-                              }
+                              final dateKey = sortedDates[index];
+                              final dateAvailabilities =
+                                  availabilitiesByDate[dateKey] ?? [];
+                              final date = DateTime.parse(dateKey);
 
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,7 +504,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                   Container(
                                     width: double.infinity,
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
+                                      vertical: 12,
                                       horizontal: 16,
                                     ),
                                     margin: const EdgeInsets.only(
@@ -407,7 +518,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
-                                      day,
+                                      _formatDate(date),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -419,9 +530,10 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                     shrinkWrap: true,
                                     physics:
                                         const NeverScrollableScrollPhysics(),
-                                    itemCount: dayAvailabilities.length,
+                                    itemCount: dateAvailabilities.length,
                                     itemBuilder: (context, slotIndex) {
-                                      final slot = dayAvailabilities[slotIndex];
+                                      final slot =
+                                          dateAvailabilities[slotIndex];
                                       return TimeSlotWidget(
                                         availability: slot,
                                         onDelete:
