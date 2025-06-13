@@ -206,6 +206,60 @@ class FacultyProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> completeAppointment(String appointmentId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.put(
+        '/appointments/$appointmentId/complete',
+        {},
+      );
+      if (response.statusCode == 200) {
+        await fetchFacultyAppointments();
+        return true;
+      } else {
+        _error = response.error ?? 'Failed to complete appointment';
+        return false;
+      }
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> cancelAppointment(String appointmentId, {String? reason}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final body = {if (reason != null && reason.isNotEmpty) 'reason': reason};
+
+      final response = await ApiService.put(
+        '/appointments/$appointmentId/cancel',
+        body,
+      );
+      if (response.statusCode == 200) {
+        await fetchFacultyAppointments();
+        return true;
+      } else {
+        _error = response.error ?? 'Failed to cancel appointment';
+        return false;
+      }
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

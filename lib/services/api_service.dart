@@ -13,25 +13,25 @@ class ApiResponse {
 }
 
 class ApiService {
-  // static String get baseUrl {
-  //   return 'https://campusconenct-backend.onrender.com/api';
-  // }
-
-    static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5001/api';
-    }
-
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5001/api';
-    }
-
-    if (Platform.isIOS) {
-      return 'http://localhost:5001/api';
-    }
-
-    return 'http://localhost:5001/api';
+  static String get baseUrl {
+    return 'https://campusconenct-backend.onrender.com/api';
   }
+
+  // static String get baseUrl {
+  //   if (kIsWeb) {
+  //     return 'http://localhost:5001/api';
+  //   }
+
+  //   if (Platform.isAndroid) {
+  //     return 'http://10.0.2.2:5001/api';
+  //   }
+
+  //   if (Platform.isIOS) {
+  //     return 'http://localhost:5001/api';
+  //   }
+
+  //   return 'http://localhost:5001/api';
+  // }
 
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

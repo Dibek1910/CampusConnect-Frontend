@@ -32,7 +32,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 5, vsync: this); // Changed to 5 tabs
 
     _animationController = AnimationController(
       vsync: this,
@@ -120,6 +120,77 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
       _showSnackBar(
         facultyProvider.error ?? 'Failed to update appointment status',
       );
+    }
+  }
+
+  Future<void> _completeAppointment(String appointmentId) async {
+    final facultyProvider = Provider.of<FacultyProvider>(
+      context,
+      listen: false,
+    );
+    final success = await facultyProvider.completeAppointment(appointmentId);
+
+    if (success) {
+      _showSnackBar('Appointment marked as completed successfully');
+    } else {
+      _showSnackBar(facultyProvider.error ?? 'Failed to complete appointment');
+    }
+  }
+
+  Future<void> _cancelAppointment(String appointmentId) async {
+    final reasonController = TextEditingController();
+
+    final reason = await showDialog<String?>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Cancel Appointment'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Are you sure you want to cancel this appointment?'),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reason (Optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('No'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, reasonController.text),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.errorColor,
+                ),
+                child: const Text('Yes, Cancel'),
+              ),
+            ],
+          ),
+    );
+
+    if (reason != null) {
+      final facultyProvider = Provider.of<FacultyProvider>(
+        context,
+        listen: false,
+      );
+      final success = await facultyProvider.cancelAppointment(
+        appointmentId,
+        reason: reason.isNotEmpty ? reason : null,
+      );
+
+      if (success) {
+        _showSnackBar('Appointment cancelled successfully');
+      } else {
+        _showSnackBar(facultyProvider.error ?? 'Failed to cancel appointment');
+      }
     }
   }
 
@@ -217,11 +288,6 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
         title: const Text('Faculty Dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadAppointments,
-            tooltip: 'Refresh',
-          ),
-          IconButton(
             icon: const Icon(Icons.person),
             onPressed: _navigateToProfile,
             tooltip: 'Profile',
@@ -232,15 +298,55 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
             tooltip: 'Logout',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Accepted'),
-            Tab(text: 'Rejected'),
-          ],
-          indicatorWeight: 3.0,
-          indicatorColor: Colors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48.0),
+          child: Container(
+            height: 48.0,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true, // Make tabs scrollable
+              tabAlignment: TabAlignment.start, // Align tabs to start
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+              ), // Add padding
+              tabs: const [
+                Tab(
+                  child: Text(
+                    'Pending',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Accepted',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Rejected',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Completed',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Cancelled',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+              indicatorWeight: 3.0,
+              indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+            ),
+          ),
         ),
         elevation: 4,
       ),
@@ -345,6 +451,10 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                   _buildAppointmentList('pending'),
                                   _buildAppointmentList('accepted'),
                                   _buildAppointmentList('rejected'),
+                                  _buildAppointmentList('completed'),
+                                  _buildAppointmentList(
+                                    'cancelled',
+                                  ), // Added cancelled tab view
                                 ],
                               ),
                     ),
@@ -361,7 +471,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
         ? EmptyState(
           message: 'No $status appointments',
           subMessage: 'Pull down to refresh',
-          icon: Icons.calendar_today_outlined,
+          icon: _getStatusIcon(status),
           onAction: _loadAppointments,
           actionLabel: 'Refresh',
         )
@@ -381,6 +491,23 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
             },
           ),
         );
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'pending':
+        return Icons.hourglass_empty;
+      case 'accepted':
+        return Icons.event_available;
+      case 'rejected':
+        return Icons.event_busy;
+      case 'completed':
+        return Icons.check_circle_outline;
+      case 'cancelled':
+        return Icons.cancel_outlined;
+      default:
+        return Icons.event_note;
+    }
   }
 
   Widget _buildAppointmentCard(AppointmentModel appointment, String status) {
@@ -451,6 +578,17 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                 ),
               ),
             ],
+            if (appointment.status == 'cancelled' &&
+                appointment.cancelReason != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Cancellation Reason: ${appointment.cancelReason}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.errorColor,
+                ),
+              ),
+            ],
             if (appointment.status == 'pending') ...[
               const SizedBox(height: 16),
               Row(
@@ -479,12 +617,26 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
             ],
             if (appointment.status == 'accepted') ...[
               const SizedBox(height: 16),
-              ButtonWidget(
-                text: 'Mark as Completed',
-                onPressed:
-                    () => _updateAppointmentStatus(appointment.id, 'completed'),
-                backgroundColor: AppTheme.accentColor,
-                width: double.infinity,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ButtonWidget(
+                    text: 'Complete',
+                    onPressed: () => _completeAppointment(appointment.id),
+                    backgroundColor: AppTheme.accentColor,
+                    width: double.infinity,
+                    icon: Icons.check_circle_outline,
+                  ),
+                  const SizedBox(height: 12),
+                  ButtonWidget(
+                    text: 'Cancel Appointment',
+                    onPressed: () => _cancelAppointment(appointment.id),
+                    backgroundColor: AppTheme.errorColor,
+                    isOutlined: true,
+                    width: double.infinity,
+                    icon: Icons.cancel_outlined,
+                  ),
+                ],
               ),
             ],
           ],

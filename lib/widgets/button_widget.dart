@@ -3,105 +3,126 @@ import 'package:campus_connect/config/theme.dart';
 
 class ButtonWidget extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
-  final bool isLoading;
-  final bool isOutlined;
+  final VoidCallback? onPressed;
   final Color? backgroundColor;
   final Color? textColor;
+  final bool isOutlined;
+  final bool isLoading;
   final double? width;
-  final double height;
-  final double borderRadius;
+  final double? height;
   final EdgeInsetsGeometry? padding;
   final IconData? icon;
-  final double elevation;
-  final bool fullWidth;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final BorderRadius? borderRadius;
 
   const ButtonWidget({
     Key? key,
     required this.text,
-    required this.onPressed,
-    this.isLoading = false,
-    this.isOutlined = false,
+    this.onPressed,
     this.backgroundColor,
     this.textColor,
+    this.isOutlined = false,
+    this.isLoading = false,
     this.width,
-    this.height = 50,
-    this.borderRadius = 8,
+    this.height,
     this.padding,
     this.icon,
-    this.elevation = 2,
-    this.fullWidth = false,
+    this.fontSize,
+    this.fontWeight,
+    this.borderRadius,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final effectiveWidth = fullWidth ? double.infinity : width;
+    final effectiveBackgroundColor = backgroundColor ?? AppTheme.primaryColor;
+    final effectiveTextColor =
+        textColor ?? (isOutlined ? effectiveBackgroundColor : Colors.white);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      width: effectiveWidth,
-      height: height,
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isOutlined
-                  ? Colors.transparent
-                  : (backgroundColor ?? theme.primaryColor),
-          foregroundColor:
-              isOutlined
-                  ? (textColor ?? theme.primaryColor)
-                  : (textColor ?? Colors.white),
-          elevation: isOutlined ? 0 : elevation,
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(borderRadius),
-            side:
-                isOutlined
-                    ? BorderSide(
-                      color: backgroundColor ?? theme.primaryColor,
-                      width: 1.5,
-                    )
-                    : BorderSide.none,
-          ),
-          disabledBackgroundColor:
-              isOutlined ? Colors.transparent : Colors.grey.shade300,
-          disabledForegroundColor:
-              isOutlined ? Colors.grey.shade400 : Colors.white70,
-          shadowColor: Colors.black.withOpacity(0.2),
-        ),
-        child:
-            isLoading
-                ? SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isOutlined
-                          ? (textColor ?? theme.primaryColor)
-                          : Colors.white,
-                    ),
+    return SizedBox(
+      width: width,
+      height: height ?? 48,
+      child:
+          isOutlined
+              ? OutlinedButton(
+                onPressed: isLoading ? null : onPressed,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: effectiveBackgroundColor, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: borderRadius ?? BorderRadius.circular(8),
                   ),
-                )
-                : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, size: 20),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      text,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  padding:
+                      padding ??
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
+                child: _buildButtonContent(effectiveTextColor),
+              )
+              : ElevatedButton(
+                onPressed: isLoading ? null : onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: effectiveBackgroundColor,
+                  foregroundColor: effectiveTextColor,
+                  elevation: 2,
+                  shadowColor: effectiveBackgroundColor.withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: borderRadius ?? BorderRadius.circular(8),
+                  ),
+                  padding:
+                      padding ??
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                child: _buildButtonContent(effectiveTextColor),
+              ),
+    );
+  }
+
+  Widget _buildButtonContent(Color textColor) {
+    if (isLoading) {
+      return SizedBox(
+        height: 20,
+        width: 20,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(textColor),
+        ),
+      );
+    }
+
+    if (icon != null) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18, color: textColor),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize ?? 16,
+                fontWeight: fontWeight ?? FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Text(
+      text,
+      style: TextStyle(
+        color: textColor,
+        fontSize: fontSize ?? 16,
+        fontWeight: fontWeight ?? FontWeight.w600,
+        letterSpacing: 0.1,
       ),
+      overflow: TextOverflow.ellipsis,
+      maxLines: 1,
     );
   }
 }

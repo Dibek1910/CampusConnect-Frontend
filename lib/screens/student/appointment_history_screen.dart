@@ -27,7 +27,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this); // Changed to 5 tabs
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAppointments();
@@ -145,20 +145,62 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
     final completedAppointments = appointmentProvider.getFilteredAppointments(
       'completed',
     );
+    final cancelledAppointments = appointmentProvider.getFilteredAppointments(
+      'cancelled',
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Appointment History'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Accepted'),
-            Tab(text: 'Rejected'),
-            Tab(text: 'Completed'),
-          ],
-          indicatorWeight: 3.0,
-          indicatorColor: Colors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48.0),
+          child: Container(
+            height: 48.0,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true, // Make tabs scrollable
+              tabAlignment: TabAlignment.start, // Align tabs to start
+              labelPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+              ), // Add padding
+              tabs: const [
+                Tab(
+                  child: Text(
+                    'Pending',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Accepted',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Rejected',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Completed',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Tab(
+                  child: Text(
+                    'Cancelled',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+              indicatorWeight: 3.0,
+              indicatorColor: Colors.white,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+            ),
+          ),
         ),
         elevation: 4,
       ),
@@ -177,6 +219,10 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
                   _buildAppointmentList(acceptedAppointments, 'accepted'),
                   _buildAppointmentList(rejectedAppointments, 'rejected'),
                   _buildAppointmentList(completedAppointments, 'completed'),
+                  _buildAppointmentList(
+                    cancelledAppointments,
+                    'cancelled',
+                  ), // Added cancelled tab
                 ],
               ),
     );
@@ -294,6 +340,18 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
                             ),
                           ),
                         ],
+                        if (appointment.status == 'cancelled' &&
+                            appointment.cancelReason != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Cancellation Reason: ${appointment.cancelReason}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.errorColor,
+                            ),
+                          ),
+                        ],
+                        // Only show cancel button for accepted appointments (students cannot mark as completed)
                         if (appointment.status == 'accepted') ...[
                           const SizedBox(height: 16),
                           ButtonWidget(
@@ -302,6 +360,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
                             backgroundColor: AppTheme.errorColor,
                             isOutlined: true,
                             width: double.infinity,
+                            icon: Icons.cancel_outlined,
                           ),
                         ],
                       ],
@@ -324,6 +383,8 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
         return Icons.event_busy;
       case 'completed':
         return Icons.check_circle_outline;
+      case 'cancelled':
+        return Icons.cancel_outlined;
       default:
         return Icons.event_note;
     }
