@@ -18,8 +18,6 @@ class AppointmentProvider extends ChangeNotifier {
 
     try {
       final response = await ApiService.get('/appointments/student');
-      print('Student appointments response: ${response.statusCode}');
-      print('Student appointments data: ${response.data}');
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data['data'];
@@ -30,24 +28,18 @@ class AppointmentProvider extends ChangeNotifier {
                     try {
                       return AppointmentModel.fromJson(appointment);
                     } catch (e) {
-                      print('Error parsing appointment: $e');
-                      print('Appointment data: $appointment');
                       return null;
                     }
                   })
                   .whereType<AppointmentModel>()
                   .toList();
-
-          print('Parsed student appointments: ${_appointments.length}');
         } else {
-          print('Data is null or not a list: $data');
           _error = 'Invalid appointment data format';
         }
       } else {
         _error = response.error ?? 'Failed to fetch appointments';
       }
     } catch (e) {
-      print('Exception in fetchStudentAppointments: $e');
       _error = e.toString();
     } finally {
       _isLoading = false;
@@ -61,10 +53,7 @@ class AppointmentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Booking appointment with data: $appointmentData');
       final response = await ApiService.post('/appointments', appointmentData);
-      print('Book appointment response: ${response.statusCode}');
-      print('Book appointment data: ${response.data}');
 
       if (response.statusCode == 201) {
         await fetchStudentAppointments();
@@ -74,7 +63,6 @@ class AppointmentProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('Exception in bookAppointment: $e');
       _error = e.toString();
       return false;
     } finally {
@@ -89,13 +77,10 @@ class AppointmentProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Requesting appointment with data: $appointmentData');
       final response = await ApiService.post(
         '/appointments/request',
         appointmentData,
       );
-      print('Request appointment response: ${response.statusCode}');
-      print('Request appointment data: ${response.data}');
 
       if (response.statusCode == 201) {
         await fetchStudentAppointments();
@@ -105,7 +90,6 @@ class AppointmentProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('Exception in requestAppointment: $e');
       _error = e.toString();
       return false;
     } finally {
@@ -122,14 +106,11 @@ class AppointmentProvider extends ChangeNotifier {
     try {
       final body =
           reason != null && reason.isNotEmpty ? {'reason': reason} : {};
-      print('Cancelling appointment $appointmentId with reason: $reason');
 
       final response = await ApiService.put(
         '/appointments/$appointmentId/cancel',
         body,
       );
-      print('Cancel appointment response: ${response.statusCode}');
-      print('Cancel appointment data: ${response.data}');
 
       if (response.statusCode == 200) {
         await fetchStudentAppointments();
@@ -139,7 +120,6 @@ class AppointmentProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      print('Exception in cancelAppointment: $e');
       _error = e.toString();
       return false;
     } finally {

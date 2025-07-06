@@ -32,7 +32,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this); // Changed to 5 tabs
+    _tabController = TabController(length: 5, vsync: this);
 
     _animationController = AnimationController(
       vsync: this,
@@ -304,11 +304,9 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
             height: 48.0,
             child: TabBar(
               controller: _tabController,
-              isScrollable: true, // Make tabs scrollable
-              tabAlignment: TabAlignment.start, // Align tabs to start
-              labelPadding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ), // Add padding
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 16.0),
               tabs: const [
                 Tab(
                   child: Text(
@@ -452,9 +450,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
                                   _buildAppointmentList('accepted'),
                                   _buildAppointmentList('rejected'),
                                   _buildAppointmentList('completed'),
-                                  _buildAppointmentList(
-                                    'cancelled',
-                                  ), // Added cancelled tab view
+                                  _buildAppointmentList('cancelled'),
                                 ],
                               ),
                     ),

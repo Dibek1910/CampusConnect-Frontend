@@ -53,7 +53,6 @@ class _TimeSlotWidgetState extends State<TimeSlotWidget> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       selectableDayPredicate: (DateTime date) {
-        // Only allow weekdays (Monday = 1, Friday = 5)
         return date.weekday >= 1 && date.weekday <= 5;
       },
       helpText: 'Select availability date',
@@ -86,7 +85,6 @@ class _TimeSlotWidgetState extends State<TimeSlotWidget> {
     );
 
     if (pickedTime != null) {
-      // Validate time range
       if (pickedTime.hour < 9 || pickedTime.hour >= 18) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -120,7 +118,6 @@ class _TimeSlotWidgetState extends State<TimeSlotWidget> {
     final endHour = int.parse(endTimeParts[0]);
     final endMinute = int.parse(endTimeParts[1]);
 
-    // Validate time range (9 AM to 6 PM)
     if (startHour < 9 || startHour >= 18) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -206,7 +203,6 @@ class _TimeSlotWidgetState extends State<TimeSlotWidget> {
                 ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Date Selection
                     Row(
                       children: [
                         Expanded(
@@ -254,7 +250,6 @@ class _TimeSlotWidgetState extends State<TimeSlotWidget> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Time Selection
                     Row(
                       children: [
                         Expanded(

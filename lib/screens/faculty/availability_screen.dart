@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:campus_connect/models/availability_model.dart';
 import 'package:campus_connect/providers/availability_provider.dart';
 import 'package:campus_connect/widgets/button_widget.dart';
+import 'package:campus_connect/widgets/time_input_widget.dart';
 import 'package:campus_connect/widgets/time_slot_widget.dart';
 import 'package:campus_connect/widgets/loading_indicator.dart';
 import 'package:campus_connect/widgets/error_display.dart';
@@ -20,8 +21,8 @@ class AvailabilityScreen extends StatefulWidget {
 class _AvailabilityScreenState extends State<AvailabilityScreen>
     with SingleTickerProviderStateMixin {
   DateTime _selectedDate = DateTime.now();
-  final TextEditingController _startTimeController = TextEditingController();
-  final TextEditingController _endTimeController = TextEditingController();
+  String _startTime = '09:00';
+  String _endTime = '18:00';
   bool _isAdding = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -38,7 +39,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     );
     _animationController.forward();
 
-    // Set default date to next weekday if today is weekend
     _setDefaultDate();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -49,7 +49,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
   void _setDefaultDate() {
     final now = DateTime.now();
     if (now.weekday > 5) {
-      // If weekend, set to next Monday
       _selectedDate = now.add(Duration(days: 8 - now.weekday));
     } else {
       _selectedDate = now;
@@ -58,8 +57,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
 
   @override
   void dispose() {
-    _startTimeController.dispose();
-    _endTimeController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -79,7 +76,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       selectableDayPredicate: (DateTime date) {
-        // Only allow weekdays (Monday = 1, Friday = 5)
         return date.weekday >= 1 && date.weekday <= 5;
       },
       helpText: 'Select availability date',
@@ -95,35 +91,20 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
   }
 
   Future<void> _addAvailabilitySlot() async {
-    if (_startTimeController.text.isEmpty || _endTimeController.text.isEmpty) {
-      _showSnackBar('Please enter both start and end time');
-      return;
-    }
-
-    final RegExp timeRegex = RegExp(r'^([01]?[0-9]|2[0-3]):[0-5][0-9]$');
-    if (!timeRegex.hasMatch(_startTimeController.text) ||
-        !timeRegex.hasMatch(_endTimeController.text)) {
-      _showSnackBar('Please enter time in HH:MM format');
-      return;
-    }
-
-    final startTimeParts = _startTimeController.text.split(':');
-    final endTimeParts = _endTimeController.text.split(':');
+    final startTimeParts = _startTime.split(':');
+    final endTimeParts = _endTime.split(':');
 
     final startHour = int.parse(startTimeParts[0]);
     final startMinute = int.parse(startTimeParts[1]);
     final endHour = int.parse(endTimeParts[0]);
     final endMinute = int.parse(endTimeParts[1]);
 
-    // Validate time range (9 AM to 6 PM)
-    if (startHour < 9 ||
-        startHour >= 18 ||
-        (startHour == 18 && startMinute > 0)) {
+    if (startHour < 9 || startHour >= 18) {
       _showSnackBar('Start time must be between 9:00 AM and 6:00 PM');
       return;
     }
 
-    if (endHour < 9 || endHour > 18 || (endHour == 18 && endMinute > 0)) {
+    if (endHour < 9 || endHour > 18) {
       _showSnackBar('End time must be between 9:00 AM and 6:00 PM');
       return;
     }
@@ -134,7 +115,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
       return;
     }
 
-    // Check if the time is not in the past for today's date
     final now = DateTime.now();
     if (_selectedDate.day == now.day &&
         _selectedDate.month == now.month &&
@@ -160,8 +140,8 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
 
     final slotData = {
       'date': _selectedDate.toIso8601String(),
-      'startTime': _startTimeController.text,
-      'endTime': _endTimeController.text,
+      'startTime': _startTime,
+      'endTime': _endTime,
     };
 
     final success = await availabilityProvider.addAvailabilitySlot(slotData);
@@ -171,8 +151,8 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     });
 
     if (success) {
-      _startTimeController.clear();
-      _endTimeController.clear();
+      _startTime = '09:00';
+      _endTime = '18:00';
       _showSnackBar('Availability slot added successfully');
     } else {
       _showSnackBar(
@@ -221,32 +201,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     }
   }
 
-  Future<void> _showTimePickerDialog(TextEditingController controller) async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (BuildContext context, Widget? child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-          child: child!,
-        );
-      },
-      helpText: 'Select time (9 AM - 6 PM)',
-    );
-
-    if (pickedTime != null) {
-      // Validate time range
-      if (pickedTime.hour < 9 || pickedTime.hour >= 18) {
-        _showSnackBar('Please select a time between 9:00 AM and 6:00 PM');
-        return;
-      }
-
-      final hour = pickedTime.hour.toString().padLeft(2, '0');
-      final minute = pickedTime.minute.toString().padLeft(2, '0');
-      controller.text = '$hour:$minute';
-    }
-  }
-
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -267,7 +221,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
     final availabilityProvider = Provider.of<AvailabilityProvider>(context);
     final availabilities = availabilityProvider.availabilities;
 
-    // Group availabilities by date
     Map<String, List<AvailabilityModel>> availabilitiesByDate = {};
 
     for (var availability in availabilities) {
@@ -278,7 +231,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
       availabilitiesByDate[dateKey]!.add(availability);
     }
 
-    // Sort dates
     final sortedDates =
         availabilitiesByDate.keys.toList()..sort((a, b) => a.compareTo(b));
 
@@ -322,7 +274,6 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Date Selection
                                 Row(
                                   children: [
                                     Expanded(
@@ -380,77 +331,31 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                                   ],
                                 ),
 
+                                const SizedBox(height: 24),
+
+                                TimeInputWidget(
+                                  label: 'Start Time',
+                                  initialTime: _startTime,
+                                  onTimeChanged: (time) {
+                                    setState(() {
+                                      _startTime = time;
+                                    });
+                                  },
+                                ),
+
                                 const SizedBox(height: 16),
 
-                                // Time Selection
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _startTimeController,
-                                        decoration: InputDecoration(
-                                          labelText: 'Start Time (9 AM - 6 PM)',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 16,
-                                              ),
-                                          suffixIcon: IconButton(
-                                            icon: const Icon(Icons.access_time),
-                                            onPressed:
-                                                () => _showTimePickerDialog(
-                                                  _startTimeController,
-                                                ),
-                                          ),
-                                        ),
-                                        keyboardType: TextInputType.datetime,
-                                        readOnly: true,
-                                        onTap:
-                                            () => _showTimePickerDialog(
-                                              _startTimeController,
-                                            ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: TextFormField(
-                                        controller: _endTimeController,
-                                        decoration: InputDecoration(
-                                          labelText: 'End Time (9 AM - 6 PM)',
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                horizontal: 16,
-                                                vertical: 16,
-                                              ),
-                                          suffixIcon: IconButton(
-                                            icon: const Icon(Icons.access_time),
-                                            onPressed:
-                                                () => _showTimePickerDialog(
-                                                  _endTimeController,
-                                                ),
-                                          ),
-                                        ),
-                                        keyboardType: TextInputType.datetime,
-                                        readOnly: true,
-                                        onTap:
-                                            () => _showTimePickerDialog(
-                                              _endTimeController,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
+                                TimeInputWidget(
+                                  label: 'End Time',
+                                  initialTime: _endTime,
+                                  onTimeChanged: (time) {
+                                    setState(() {
+                                      _endTime = time;
+                                    });
+                                  },
                                 ),
-                                const SizedBox(height: 16),
+
+                                const SizedBox(height: 24),
                                 ButtonWidget(
                                   text: 'Add Slot',
                                   onPressed: _addAvailabilitySlot,
@@ -496,6 +401,7 @@ class _AvailabilityScreenState extends State<AvailabilityScreen>
                               final dateKey = sortedDates[index];
                               final dateAvailabilities =
                                   availabilitiesByDate[dateKey] ?? [];
+
                               final date = DateTime.parse(dateKey);
 
                               return Column(

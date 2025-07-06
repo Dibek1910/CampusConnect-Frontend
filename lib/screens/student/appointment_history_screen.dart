@@ -27,7 +27,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this); // Changed to 5 tabs
+    _tabController = TabController(length: 5, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAppointments();
@@ -158,11 +158,9 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
             height: 48.0,
             child: TabBar(
               controller: _tabController,
-              isScrollable: true, // Make tabs scrollable
-              tabAlignment: TabAlignment.start, // Align tabs to start
-              labelPadding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ), // Add padding
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 16.0),
               tabs: const [
                 Tab(
                   child: Text(
@@ -219,10 +217,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
                   _buildAppointmentList(acceptedAppointments, 'accepted'),
                   _buildAppointmentList(rejectedAppointments, 'rejected'),
                   _buildAppointmentList(completedAppointments, 'completed'),
-                  _buildAppointmentList(
-                    cancelledAppointments,
-                    'cancelled',
-                  ), // Added cancelled tab
+                  _buildAppointmentList(cancelledAppointments, 'cancelled'),
                 ],
               ),
     );
@@ -351,7 +346,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
                             ),
                           ),
                         ],
-                        // Only show cancel button for accepted appointments (students cannot mark as completed)
+
                         if (appointment.status == 'accepted') ...[
                           const SizedBox(height: 16),
                           ButtonWidget(

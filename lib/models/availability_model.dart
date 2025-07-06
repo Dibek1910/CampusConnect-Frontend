@@ -22,8 +22,6 @@ class AvailabilityModel {
   });
 
   factory AvailabilityModel.fromJson(Map<String, dynamic> json) {
-    print('Parsing availability JSON: $json');
-
     String id = '';
     if (json.containsKey('_id')) {
       id = json['_id'] ?? '';
@@ -42,13 +40,11 @@ class AvailabilityModel {
       facultyId = json['facultyId'] ?? '';
     }
 
-    // Parse date
     DateTime date;
     try {
       date =
           json['date'] != null ? DateTime.parse(json['date']) : DateTime.now();
     } catch (e) {
-      print('Error parsing date: $e');
       date = DateTime.now();
     }
 

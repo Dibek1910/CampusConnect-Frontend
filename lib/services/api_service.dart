@@ -17,21 +17,21 @@ class ApiService {
     return 'https://campusconenct-backend.onrender.com/api';
   }
 
-  // static String get baseUrl {
-  //   if (kIsWeb) {
-  //     return 'http://localhost:5001/api';
-  //   }
+  // // static String get baseUrl {
+  // //   if (kIsWeb) {
+  // //     return 'http://localhost:5001/api';
+  // //   }
 
-  //   if (Platform.isAndroid) {
-  //     return 'http://10.0.2.2:5001/api';
-  //   }
+  // //   if (Platform.isAndroid) {
+  // //     return 'http://10.0.2.2:5001/api';
+  // //   }
 
-  //   if (Platform.isIOS) {
-  //     return 'http://localhost:5001/api';
-  //   }
+  // //   if (Platform.isIOS) {
+  // //     return 'http://localhost:5001/api';
+  // //   }
 
-  //   return 'http://localhost:5001/api';
-  // }
+  // //   return 'http://localhost:5001/api';
+  // // }
 
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -50,21 +50,13 @@ class ApiService {
     try {
       final headers = await _getHeaders();
 
-      print('Making GET request to: $baseUrl$endpoint');
-      print('Headers: $headers');
-      print('Getting');
-
       final response = await http.get(
         Uri.parse('$baseUrl$endpoint'),
         headers: headers,
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       return _processResponse(response);
     } catch (e) {
-      print('Network error in GET request: $e');
       return ApiResponse(
         statusCode: 500,
         data: null,
@@ -77,22 +69,14 @@ class ApiService {
     try {
       final headers = await _getHeaders();
 
-      print('Making POST request to: $baseUrl$endpoint');
-      print('Headers: $headers');
-      print('Body: $body');
-
       final response = await http.post(
         Uri.parse('$baseUrl$endpoint'),
         headers: headers,
         body: jsonEncode(body),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       return _processResponse(response);
     } catch (e) {
-      print('Network error in POST request: $e');
       return ApiResponse(
         statusCode: 500,
         data: null,
@@ -105,22 +89,14 @@ class ApiService {
     try {
       final headers = await _getHeaders();
 
-      print('Making PUT request to: $baseUrl$endpoint');
-      print('Headers: $headers');
-      print('Body: $body');
-
       final response = await http.put(
         Uri.parse('$baseUrl$endpoint'),
         headers: headers,
         body: jsonEncode(body),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       return _processResponse(response);
     } catch (e) {
-      print('Network error in PUT request: $e');
       return ApiResponse(
         statusCode: 500,
         data: null,
@@ -133,20 +109,13 @@ class ApiService {
     try {
       final headers = await _getHeaders();
 
-      print('Making DELETE request to: $baseUrl$endpoint');
-      print('Headers: $headers');
-
       final response = await http.delete(
         Uri.parse('$baseUrl$endpoint'),
         headers: headers,
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       return _processResponse(response);
     } catch (e) {
-      print('Network error in DELETE request: $e');
       return ApiResponse(
         statusCode: 500,
         data: null,
@@ -179,8 +148,6 @@ class ApiService {
         );
       }
     } catch (e) {
-      print('Error processing response: $e');
-
       return ApiResponse(
         statusCode: response.statusCode,
         data: null,

@@ -40,8 +40,6 @@ class AppointmentModel {
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
-    print('Parsing appointment JSON: $json');
-
     String id = '';
     if (json.containsKey('_id')) {
       id = json['_id'] ?? '';
@@ -94,7 +92,6 @@ class AppointmentModel {
       date =
           json['date'] != null ? DateTime.parse(json['date']) : DateTime.now();
     } catch (e) {
-      print('Error parsing date: $e');
       date = DateTime.now();
     }
 

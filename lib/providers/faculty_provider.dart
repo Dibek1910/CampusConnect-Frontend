@@ -107,39 +107,28 @@ class FacultyProvider extends ChangeNotifier {
         '/students/faculty/$facultyId/availability',
       );
 
-      print('API Response: ${response.statusCode}');
-      print('API Data: ${response.data}');
-
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data['data'];
 
         if (data != null && data is List) {
-          print('Availability data length: ${data.length}');
-
           _availabilities =
               data
                   .map((availability) {
                     try {
                       return AvailabilityModel.fromJson(availability);
                     } catch (e) {
-                      print('Error parsing availability: $e');
-                      print('Availability data: $availability');
                       return null;
                     }
                   })
                   .whereType<AvailabilityModel>()
                   .toList();
-
-          print('Parsed availabilities: ${_availabilities.length}');
         } else {
-          print('Data is null or not a list: $data');
           _error = 'Invalid availability data format';
         }
       } else {
         _error = response.error ?? 'Failed to fetch faculty availability';
       }
     } catch (e) {
-      print('Exception in fetchFacultyAvailability: $e');
       _error = e.toString();
     } finally {
       _isLoading = false;

@@ -100,7 +100,6 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
     final facultyProvider = Provider.of<FacultyProvider>(context);
     final availabilities = facultyProvider.availabilities;
 
-    // Group availabilities by date
     Map<String, List<AvailabilityModel>> availabilitiesByDate = {};
 
     for (var availability in availabilities) {
@@ -111,7 +110,6 @@ class _FacultyDetailScreenState extends State<FacultyDetailScreen>
       availabilitiesByDate[dateKey]!.add(availability);
     }
 
-    // Sort dates
     final sortedDates =
         availabilitiesByDate.keys.toList()..sort((a, b) => a.compareTo(b));
 

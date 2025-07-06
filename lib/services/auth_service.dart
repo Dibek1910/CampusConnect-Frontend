@@ -71,8 +71,6 @@ class AuthService {
 
       return response;
     } catch (e) {
-      print('Error during logout: $e');
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('token');
       await prefs.remove('role');

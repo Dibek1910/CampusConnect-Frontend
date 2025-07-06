@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:campus_connect/providers/appointment_provider.dart';
 import 'package:campus_connect/widgets/button_widget.dart';
 import 'package:campus_connect/widgets/input_field.dart';
+import 'package:campus_connect/widgets/time_input_widget.dart';
 import 'package:campus_connect/widgets/loading_indicator.dart';
 import 'package:campus_connect/config/theme.dart';
 
@@ -43,14 +44,13 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
   @override
   void initState() {
     super.initState();
-    // Set default date to next weekday if today is weekend
+
     _setDefaultDate();
   }
 
   void _setDefaultDate() {
     final now = DateTime.now();
     if (now.weekday > 5) {
-      // If weekend, set to next Monday
       _selectedDate = now.add(Duration(days: 8 - now.weekday));
     } else {
       _selectedDate = now;
@@ -70,7 +70,7 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 60)),
       selectableDayPredicate: (DateTime date) {
-        return date.weekday <= 5; // Only weekdays
+        return date.weekday <= 5;
       },
       helpText: 'Select appointment date',
       cancelText: 'Cancel',
@@ -80,71 +80,6 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(
-        hour: int.parse(_startTime.split(':')[0]),
-        minute: int.parse(_startTime.split(':')[1]),
-      ),
-      builder: (BuildContext context, Widget? child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-          child: child!,
-        );
-      },
-      helpText: 'Select start time (9 AM - 6 PM)',
-    );
-
-    if (picked != null) {
-      if (picked.hour < 9 || picked.hour >= 18) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a time between 9:00 AM and 6:00 PM'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-        return;
-      }
-
-      final int durationMinutes = int.parse(_selectedDuration);
-      final int endHour = picked.hour + (picked.minute + durationMinutes) ~/ 60;
-      final int endMinute = (picked.minute + durationMinutes) % 60;
-
-      if (endHour > 18 || (endHour == 18 && endMinute > 0)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Appointment must end before 6:00 PM'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
-        return;
-      }
-
-      // Check if the time is not in the past for today's date
-      final now = DateTime.now();
-      if (_selectedDate.day == now.day &&
-          _selectedDate.month == now.month &&
-          _selectedDate.year == now.year) {
-        if (picked.hour < now.hour ||
-            (picked.hour == now.hour && picked.minute <= now.minute)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Cannot select past time for today'),
-              backgroundColor: AppTheme.errorColor,
-            ),
-          );
-          return;
-        }
-      }
-
-      setState(() {
-        _startTime =
-            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       });
     }
   }
@@ -162,8 +97,46 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
     return '${endHour.toString().padLeft(2, '0')}:${endMinute.toString().padLeft(2, '0')}';
   }
 
+  bool _validateTime() {
+    final parts = _startTime.split(':');
+    final startHour = int.parse(parts[0]);
+    final startMinute = int.parse(parts[1]);
+    final durationMinutes = int.parse(_selectedDuration);
+
+    if (startHour < 9 || startHour >= 18) {
+      return false;
+    }
+
+    final endTimeMinutes = startHour * 60 + startMinute + durationMinutes;
+    final endHour = endTimeMinutes ~/ 60;
+    final endMinute = endTimeMinutes % 60;
+
+    if (endHour > 18 || (endHour == 18 && endMinute > 0)) {
+      return false;
+    }
+
+    final now = DateTime.now();
+    if (_selectedDate.day == now.day &&
+        _selectedDate.month == now.month &&
+        _selectedDate.year == now.year) {
+      if (startHour < now.hour ||
+          (startHour == now.hour && startMinute <= now.minute)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   Future<void> _requestAppointment() async {
     if (_formKey.currentState!.validate()) {
+      if (!_validateTime()) {
+        _showErrorSnackBar(
+          'Please select a valid time. Appointments must be between 9:00 AM and 6:00 PM, and cannot be in the past.',
+        );
+        return;
+      }
+
       setState(() {
         _isSubmitting = true;
       });
@@ -331,33 +304,16 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
                               ),
                               const SizedBox(height: 16),
 
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Start Time: $_startTime',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: () => _selectTime(context),
-                                    icon: const Icon(
-                                      Icons.access_time,
-                                      size: 18,
-                                    ),
-                                    label: const Text('Select'),
-                                    style: ElevatedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              TimeInputWidget(
+                                label: 'Start Time',
+                                initialTime: _startTime,
+                                onTimeChanged: (time) {
+                                  setState(() {
+                                    _startTime = time;
+                                  });
+                                },
                               ),
+
                               const SizedBox(height: 16),
 
                               Column(
