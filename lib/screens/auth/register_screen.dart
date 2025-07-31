@@ -11,7 +11,7 @@ import 'package:campus_connect/config/theme.dart';
 class RegisterScreen extends StatefulWidget {
   final String role;
 
-  const RegisterScreen({Key? key, required this.role}) : super(key: key);
+  const RegisterScreen({super.key, required this.role});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -31,7 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   final List<int> _yearOptions = [1, 2, 3, 4];
   List<int> _semesterOptions = [1, 2];
-  int _selectedYear = 1;
+  final int _selectedYear = 1;
   int _selectedSemester = 1;
 
   bool _otpSent = false;
@@ -194,6 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       );
 
       if (success) {
+        if (!mounted) return;
         if (widget.role == 'student') {
           Navigator.of(
             context,

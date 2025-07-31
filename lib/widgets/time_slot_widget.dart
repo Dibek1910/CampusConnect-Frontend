@@ -9,11 +9,11 @@ class TimeSlotWidget extends StatefulWidget {
   final Function(Map<String, dynamic>) onUpdate;
 
   const TimeSlotWidget({
-    Key? key,
+    super.key,
     required this.availability,
     required this.onDelete,
     required this.onUpdate,
-  }) : super(key: key);
+  });
 
   @override
   State<TimeSlotWidget> createState() => _TimeSlotWidgetState();
@@ -85,6 +85,7 @@ class _TimeSlotWidgetState extends State<TimeSlotWidget> {
     );
 
     if (pickedTime != null) {
+      if (!mounted) return;
       if (pickedTime.hour < 9 || pickedTime.hour >= 18) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

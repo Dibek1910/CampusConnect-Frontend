@@ -8,12 +8,12 @@ class StatusBadge extends StatelessWidget {
   final bool animate;
 
   const StatusBadge({
-    Key? key,
+    super.key,
     required this.status,
     this.fontSize = 12,
     this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     this.animate = false,
-  }) : super(key: key);
+  });
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {

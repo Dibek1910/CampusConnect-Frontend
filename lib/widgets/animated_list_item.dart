@@ -9,14 +9,14 @@ class AnimatedListItem extends StatefulWidget {
   final double? beginOpacity;
 
   const AnimatedListItem({
-    Key? key,
+    super.key,
     required this.child,
     this.duration = const Duration(milliseconds: 300),
     this.delay = Duration.zero,
     this.curve = Curves.easeInOut,
     this.beginOffset,
     this.beginOpacity = 0.0,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedListItem> createState() => _AnimatedListItemState();

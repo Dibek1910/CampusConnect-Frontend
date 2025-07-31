@@ -9,11 +9,11 @@ class OtpVerificationWidget extends StatefulWidget {
   final VoidCallback onCancel;
 
   const OtpVerificationWidget({
-    Key? key,
+    super.key,
     required this.email,
     required this.onVerified,
     required this.onCancel,
-  }) : super(key: key);
+  });
 
   @override
   State<OtpVerificationWidget> createState() => _OtpVerificationWidgetState();

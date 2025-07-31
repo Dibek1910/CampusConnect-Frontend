@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:campus_connect/config/route.dart';
 import 'package:campus_connect/models/availability_model.dart';
 import 'package:campus_connect/providers/faculty_provider.dart';
-import 'package:campus_connect/widgets/button_widget.dart';
 import 'package:campus_connect/widgets/loading_indicator.dart';
 import 'package:campus_connect/widgets/error_display.dart';
 import 'package:campus_connect/widgets/empty_state.dart';
@@ -17,10 +16,10 @@ class FacultyDetailScreen extends StatefulWidget {
   final String facultyName;
 
   const FacultyDetailScreen({
-    Key? key,
+    super.key,
     required this.facultyId,
     required this.facultyName,
-  }) : super(key: key);
+  });
 
   @override
   State<FacultyDetailScreen> createState() => _FacultyDetailScreenState();

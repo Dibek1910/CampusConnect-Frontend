@@ -8,13 +8,12 @@ import 'package:campus_connect/widgets/button_widget.dart';
 import 'package:campus_connect/widgets/loading_indicator.dart';
 import 'package:campus_connect/widgets/error_display.dart';
 import 'package:campus_connect/widgets/empty_state.dart';
-import 'package:campus_connect/widgets/custom_tab_bar.dart';
 import 'package:campus_connect/widgets/status_badge.dart';
 import 'package:campus_connect/widgets/animated_list_item.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class FacultyDashboardScreen extends StatefulWidget {
-  const FacultyDashboardScreen({Key? key}) : super(key: key);
+  const FacultyDashboardScreen({super.key});
 
   @override
   State<FacultyDashboardScreen> createState() => _FacultyDashboardScreenState();
@@ -89,7 +88,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
     setState(() {
       _isLoading = false;
     });
-
+    if (!mounted) return;
     if (success) {
       Navigator.of(
         context,
@@ -175,7 +174,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
             ],
           ),
     );
-
+    if (!mounted) return;
     if (reason != null) {
       final facultyProvider = Provider.of<FacultyProvider>(
         context,
@@ -300,7 +299,7 @@ class _FacultyDashboardScreenState extends State<FacultyDashboardScreen>
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48.0),
-          child: Container(
+          child: SizedBox(
             height: 48.0,
             child: TabBar(
               controller: _tabController,

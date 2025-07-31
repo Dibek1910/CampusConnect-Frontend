@@ -13,10 +13,10 @@ class RequestAppointmentScreen extends StatefulWidget {
   final String facultyName;
 
   const RequestAppointmentScreen({
-    Key? key,
+    super.key,
     required this.facultyId,
     required this.facultyName,
-  }) : super(key: key);
+  });
 
   @override
   State<RequestAppointmentScreen> createState() =>
@@ -214,7 +214,7 @@ class _RequestAppointmentScreenState extends State<RequestAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appointmentProvider = Provider.of<AppointmentProvider>(context);
+    final _ = Provider.of<AppointmentProvider>(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Request Appointment'), elevation: 4),

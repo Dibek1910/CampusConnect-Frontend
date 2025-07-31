@@ -12,7 +12,7 @@ import 'package:campus_connect/widgets/animated_list_item.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class StudentHomeScreen extends StatefulWidget {
-  const StudentHomeScreen({Key? key}) : super(key: key);
+  const StudentHomeScreen({super.key});
 
   @override
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
@@ -60,6 +60,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
     try {
       await _loadFacultyList();
 
+      if (!mounted) return;
       final appointmentProvider = Provider.of<AppointmentProvider>(
         context,
         listen: false,
@@ -106,7 +107,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
     setState(() {
       _isLoading = false;
     });
-
+    if (!mounted) return;
     if (success) {
       Navigator.of(
         context,
@@ -150,7 +151,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
     final studentProfile = authProvider.studentProfile;
 
     final upcomingAppointments = appointmentProvider.getUpcomingAppointments();
-    final screenSize = MediaQuery.of(context).size;
+    final _ = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(

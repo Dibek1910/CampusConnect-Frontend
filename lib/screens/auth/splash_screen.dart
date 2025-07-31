@@ -5,7 +5,7 @@ import 'package:campus_connect/providers/auth_provider.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -53,6 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 3));
 
     if (authProvider.isLoggedIn) {
+      if (!mounted) return;
       if (authProvider.userRole == 'student') {
         Navigator.of(context).pushReplacementNamed(AppRouter.studentHomeRoute);
       } else if (authProvider.userRole == 'faculty') {
@@ -65,6 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
         ).pushReplacementNamed(AppRouter.roleSelectionRoute);
       }
     } else {
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(AppRouter.roleSelectionRoute);
     }
   }

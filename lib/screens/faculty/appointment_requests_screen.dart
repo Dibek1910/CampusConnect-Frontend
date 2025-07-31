@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:campus_connect/models/appointment_model.dart';
 import 'package:campus_connect/providers/faculty_provider.dart';
 import 'package:campus_connect/widgets/button_widget.dart';
 import 'package:campus_connect/widgets/loading_indicator.dart';
@@ -11,7 +10,7 @@ import 'package:campus_connect/widgets/status_badge.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class AppointmentRequestsScreen extends StatefulWidget {
-  const AppointmentRequestsScreen({Key? key}) : super(key: key);
+  const AppointmentRequestsScreen({super.key});
 
   @override
   State<AppointmentRequestsScreen> createState() =>

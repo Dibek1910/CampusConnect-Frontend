@@ -17,7 +17,7 @@ class BookAppointmentScreen extends StatefulWidget {
   final String endTime;
 
   const BookAppointmentScreen({
-    Key? key,
+    super.key,
     required this.facultyId,
     required this.facultyName,
     required this.availabilityId,
@@ -25,7 +25,7 @@ class BookAppointmentScreen extends StatefulWidget {
     required this.date,
     required this.startTime,
     required this.endTime,
-  }) : super(key: key);
+  });
 
   @override
   State<BookAppointmentScreen> createState() => _BookAppointmentScreenState();
@@ -146,7 +146,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen>
 
   @override
   Widget build(BuildContext context) {
-    final appointmentProvider = Provider.of<AppointmentProvider>(context);
+    final _ = Provider.of<AppointmentProvider>(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Book Appointment'), elevation: 4),

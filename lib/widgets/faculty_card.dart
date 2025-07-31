@@ -7,8 +7,7 @@ class FacultyCard extends StatelessWidget {
   final FacultyModel faculty;
   final VoidCallback? onTap;
 
-  const FacultyCard({Key? key, required this.faculty, this.onTap})
-    : super(key: key);
+  const FacultyCard({super.key, required this.faculty, this.onTap});
 
   @override
   Widget build(BuildContext context) {

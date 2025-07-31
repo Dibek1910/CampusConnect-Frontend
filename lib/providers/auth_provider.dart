@@ -3,7 +3,6 @@ import 'package:campus_connect/models/user_model.dart';
 import 'package:campus_connect/models/student_model.dart';
 import 'package:campus_connect/models/faculty_model.dart';
 import 'package:campus_connect/services/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:campus_connect/services/api_service.dart';
 import 'package:campus_connect/models/profile_model.dart';
 
@@ -162,7 +161,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _authService.logout();
+      final _ = await _authService.logout();
 
       _user = null;
       _studentProfile = null;

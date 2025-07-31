@@ -1,5 +1,3 @@
-import 'package:campus_connect/models/user_model.dart';
-
 class StudentModel {
   final String id;
   final String userId;

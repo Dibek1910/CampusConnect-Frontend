@@ -17,7 +17,7 @@ class ButtonWidget extends StatelessWidget {
   final BorderRadius? borderRadius;
 
   const ButtonWidget({
-    Key? key,
+    super.key,
     required this.text,
     this.onPressed,
     this.backgroundColor,
@@ -31,11 +31,11 @@ class ButtonWidget extends StatelessWidget {
     this.fontSize,
     this.fontWeight,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final _ = Theme.of(context);
     final effectiveBackgroundColor = backgroundColor ?? AppTheme.primaryColor;
     final effectiveTextColor =
         textColor ?? (isOutlined ? effectiveBackgroundColor : Colors.white);

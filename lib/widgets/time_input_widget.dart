@@ -9,12 +9,12 @@ class TimeInputWidget extends StatefulWidget {
   final bool enabled;
 
   const TimeInputWidget({
-    Key? key,
+    super.key,
     required this.label,
     this.initialTime,
     required this.onTimeChanged,
     this.enabled = true,
-  }) : super(key: key);
+  });
 
   @override
   State<TimeInputWidget> createState() => _TimeInputWidgetState();

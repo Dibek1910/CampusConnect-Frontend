@@ -8,11 +8,10 @@ import 'package:campus_connect/widgets/error_display.dart';
 import 'package:campus_connect/widgets/empty_state.dart';
 import 'package:campus_connect/widgets/status_badge.dart';
 import 'package:campus_connect/widgets/animated_list_item.dart';
-import 'package:campus_connect/widgets/custom_tab_bar.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class AppointmentHistoryScreen extends StatefulWidget {
-  const AppointmentHistoryScreen({Key? key}) : super(key: key);
+  const AppointmentHistoryScreen({super.key});
 
   @override
   State<AppointmentHistoryScreen> createState() =>
@@ -98,7 +97,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
             ],
           ),
     );
-
+    if (!mounted) return;
     if (reason != null) {
       final appointmentProvider = Provider.of<AppointmentProvider>(
         context,
@@ -154,7 +153,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
         title: const Text('Appointment History'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48.0),
-          child: Container(
+          child: SizedBox(
             height: 48.0,
             child: TabBar(
               controller: _tabController,
@@ -306,7 +305,7 @@ class _AppointmentHistoryScreenState extends State<AppointmentHistoryScreen>
                           style: const TextStyle(fontSize: 14),
                         ),
                         const SizedBox(height: 8),
-                        if (appointment.purposeCategory != null) ...[
+                        ...[
                           Text(
                             'Category: ${appointment.purposeCategory}',
                             style: const TextStyle(fontSize: 14),

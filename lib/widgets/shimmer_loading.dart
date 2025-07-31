@@ -8,13 +8,13 @@ class ShimmerLoading extends StatefulWidget {
   final Duration period;
 
   const ShimmerLoading({
-    Key? key,
+    super.key,
     required this.child,
     required this.isLoading,
     this.baseColor = const Color(0xFFEEEEEE),
     this.highlightColor = const Color(0xFFF5F5F5),
     this.period = const Duration(milliseconds: 1500),
-  }) : super(key: key);
+  });
 
   @override
   State<ShimmerLoading> createState() => _ShimmerLoadingState();

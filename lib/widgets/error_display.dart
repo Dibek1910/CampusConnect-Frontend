@@ -7,11 +7,11 @@ class ErrorDisplay extends StatelessWidget {
   final IconData icon;
 
   const ErrorDisplay({
-    Key? key,
+    super.key,
     required this.message,
     this.onRetry,
     this.icon = Icons.error_outline,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -26,7 +26,7 @@ class InputField extends StatelessWidget {
   final String? helperText;
 
   const InputField({
-    Key? key,
+    super.key,
     required this.label,
     required this.hint,
     required this.controller,
@@ -48,7 +48,7 @@ class InputField extends StatelessWidget {
     this.enabled = true,
     this.contentPadding,
     this.helperText,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -10,7 +10,7 @@ import 'package:campus_connect/config/theme.dart';
 class LoginScreen extends StatefulWidget {
   final String role;
 
-  const LoginScreen({Key? key, required this.role}) : super(key: key);
+  const LoginScreen({super.key, required this.role});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -71,6 +71,7 @@ class _LoginScreenState extends State<LoginScreen>
       );
 
       if (success) {
+        if (!mounted) return;
         if (widget.role == 'student') {
           Navigator.of(
             context,

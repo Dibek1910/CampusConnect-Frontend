@@ -9,7 +9,7 @@ import 'package:campus_connect/widgets/loading_indicator.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class StudentProfileScreen extends StatefulWidget {
-  const StudentProfileScreen({Key? key}) : super(key: key);
+  const StudentProfileScreen({super.key});
 
   @override
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();

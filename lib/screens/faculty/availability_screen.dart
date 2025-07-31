@@ -12,7 +12,7 @@ import 'package:campus_connect/widgets/empty_state.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class AvailabilityScreen extends StatefulWidget {
-  const AvailabilityScreen({Key? key}) : super(key: key);
+  const AvailabilityScreen({super.key});
 
   @override
   State<AvailabilityScreen> createState() => _AvailabilityScreenState();

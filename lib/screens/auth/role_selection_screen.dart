@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:campus_connect/config/route.dart';
-import 'package:campus_connect/widgets/button_widget.dart';
 import 'package:campus_connect/widgets/animated_list_item.dart';
 import 'package:campus_connect/config/theme.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
-  const RoleSelectionScreen({Key? key}) : super(key: key);
+  const RoleSelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
